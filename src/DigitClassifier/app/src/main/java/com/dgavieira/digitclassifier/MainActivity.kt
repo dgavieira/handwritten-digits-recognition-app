@@ -7,6 +7,7 @@ import android.widget.TextView
 import com.divyanshu.draw.widget.DrawView
 import android.annotation.SuppressLint
 import android.graphics.Color
+import android.util.Log
 import android.view.MotionEvent
 
 class MainActivity : AppCompatActivity() {
@@ -42,7 +43,7 @@ class MainActivity : AppCompatActivity() {
             drawView?.onTouchEvent(event)
 
             //Then if user finished a touch event, run classification
-            if (event.action == MotionEvent.ACTION_UP){
+            if (event.action == MotionEvent.ACTION_UP) {
                 classifyDrawing()
             }
             true
@@ -51,7 +52,7 @@ class MainActivity : AppCompatActivity() {
         // Setup digit classifier.
         digitClassifier
             .initialize()
-            .addOnFailureListener {e -> Log.e(TAG, "Error to setting up digit classifier.", e)}
+            .addOnFailureListener { e -> Log.e(TAG, "Error to setting up digit classifier.", e) }
     }
 
     override fun onDestroy() {

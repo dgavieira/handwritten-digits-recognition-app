@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
 }
+apply plugin: 'kotlin-android'
 
 android {
     compileSdk 30
@@ -43,4 +44,8 @@ dependencies {
 
     implementation 'org.tensorflow:tensorflow-lite:2.6.0'
     implementation 'com.github.divyanshub024:AndroidDraw:v0.1'
+    implementation "androidx.core:core-ktx:1.6.0"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "com.google.android.gms:play-services-tasks:17.2.1"
 }
+
