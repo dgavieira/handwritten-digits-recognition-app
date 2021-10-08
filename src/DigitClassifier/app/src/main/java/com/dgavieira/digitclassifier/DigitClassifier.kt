@@ -47,7 +47,7 @@ class DigitClassifier(private val context: Context) {
 
         // Load the TF Lite Model from the asset folder.
         val assetManager = context.assets
-        val model = loadModelFile(assetManager, "mnist.tflite")
+        val model = loadModelFile(assetManager, "mnist-improved.tflite")
         val interpreter = Interpreter(model)
 
         // Read the input shape from the model file
