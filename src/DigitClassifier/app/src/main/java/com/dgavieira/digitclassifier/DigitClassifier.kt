@@ -7,6 +7,7 @@ import android.graphics.Bitmap
 import android.util.Log
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.TaskCompletionSource
+import org.tensorflow.lite.Interpreter
 import java.io.FileInputStream
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -16,7 +17,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class DigitClassifier(private val context: Context) {
-    //TODO: Add a TF LIte interpreter as a field.
+    private var interpreter: Interpreter? = null
 
     var isInitialized = false
         private set
@@ -31,10 +32,10 @@ class DigitClassifier(private val context: Context) {
     fun initialize(): Task<Void?> {
         val task = TaskCompletionSource<Void?>()
         executorService.execute {
-            try{
+            try {
                 initializeInterpreter()
                 task.setResult(null)
-            } catch (e: IOException){
+            } catch (e: IOException) {
                 task.setException(e)
             }
         }
@@ -42,10 +43,21 @@ class DigitClassifier(private val context: Context) {
     }
 
     @Throws(IOException::class)
-    private fun initializeInterpreter(){
-        // TODO: Load the TF Lite Model from file and initialize an interpreter.
+    private fun initializeInterpreter() {
 
-        // TODO: Read the model input shape from model file.
+        // Load the TF Lite Model from the asset folder.
+        val assetManager = context.assets
+        val model = loadModelFile(assetManager, "mnist.tflite")
+        val interpreter = Interpreter(model)
+
+        // Read the input shape from the model file
+        val inputShape = interpreter.getInputTensor(0).shape()
+        inputImageWidth = inputShape[1]
+        inputImageHeight = inputShape[2]
+        modelInputSize = FLOAT_TYPE_SIZE * inputImageWidth * inputImageHeight * PIXEL_SIZE
+
+        // Finish interpreter initialization
+        this.interpreter = interpreter
 
         isInitialized = true
         Log.d(TAG, "Initialized TFLite interpreter.")
@@ -66,7 +78,30 @@ class DigitClassifier(private val context: Context) {
 
         // TODO: Add code to run inference with TF Lite.
 
-        return "Let's add TensorFlow Lite code!"
+        //Preprocessing: resize the input image to match the model input shape.
+        val resizedImage = Bitmap.createScaledBitmap(
+            bitmap,
+            inputImageWidth,
+            inputImageHeight,
+            true
+        )
+        val byteBuffer = convertBitmapToByteBuffer(resizedImage)
+
+        // Define an array to store the model output.
+        val output = Array(1) { FloatArray(OUTPUT_CLASSES_COUNT) }
+
+        // Run inference with the input data.
+        interpreter?.run(byteBuffer, output)
+
+        // Post-processing: find the digit that has the highest probability
+        // and return it a human-readable string.
+        val result = output[0]
+        val maxIndex = result.indices.maxByOrNull { result[it] } ?: -1
+        val resultString = "Prediction Result: %d\nConfidence: %2f".format(
+            maxIndex, result[maxIndex]
+        )
+
+        return resultString
     }
 
     fun classifyAsync(bitmap: Bitmap): Task<String> {
@@ -80,9 +115,7 @@ class DigitClassifier(private val context: Context) {
 
     fun close() {
         executorService.execute {
-            // TODO: close the TF Lite interpreter here
-
-
+            interpreter?.close()
             Log.d(TAG, "Closed TFLite interpreter.")
         }
     }
